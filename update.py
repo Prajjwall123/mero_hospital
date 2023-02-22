@@ -5,248 +5,120 @@ import sqlite3
 from tkinter import messagebox
 import runpy
 
-#connecting the database
 database = sqlite3.connect("data.db")
 cursor = database.cursor()
 
+#functions
+def hide():
+    open_eye.config(file="closeye.png")
+    password.config(show="*")
+    eyeButton.config(command=show)
+def show():
+    open_eye.config(file="openeye(1).png")
+    password.config(show=" ")
+    eyeButton.config(command=hide)
+def on_enter(event):
+    if username.get()=="NAME":
+        username.delete(0,END)
+def on_enter_2(event):
+    if password.get()=="PASSWORD":
+        password.delete(0,END)
+def on_enter_3(event):
+    if phone_number.get()=="PHONE NUMBER":
+        phone_number.delete(0,END)
+def on_enter_4(event):
+    if address.get()=="ADDRESS":
+        address.delete(0,END)
+def font():
+    login_page.destroy()
+    runpy.run_path("font.py")
+
+#connect to the database
+def connect_database():
+
+    try:
+        database = sqlite3.connect("data.db")
+        cursor = database.cursor()
+        if username.get()=="NAME" or password.get()=="PASSWORD" or address.get()=="ADDRESS" or phone_number.get()=="PHONE NUMBER":
+            messagebox.showerror("error","no field can be empty")
+        else:
+
+            #inserting into database
+            try:
+
+                cursor.execute("INSERT INTO login_info VALUES(:phone_number,:username,:password,:address)",{
+                    'phone_number': phone_number.get(),
+                    'username': username.get(),
+                    'password': password.get(),
+                    'address':address.get(),
+                })
+                messagebox.showinfo("success","try sign-in now")
+                password.delete(0,END)
+                address.delete(0, END)
+                username.delete(0, END)
+                phone_number.delete(0,END)
+            
+            except:
+                messagebox.showinfo("Error","Number in use or incorrect data format entered")
+
+        database.commit()
+        database.close()
+    except:
+        messagebox.showerror("error","problems connecting the database")
+        
+
 
 #defining the window and some basic configuration
-admin_page=Tk()
-admin_page.title("MERO HOSPITAL")
-admin_page.iconbitmap("download.ico")
-admin_page.geometry("1200x250")
-admin_page.config(bg="white")
-admin_page.resizable(False,False)
+login_page=Tk()
+login_page.title("MERO HOSPITAL")
+login_page.iconbitmap("download.ico")
+login_page.geometry("900x550")#window size same as the image size
+login_page.config(bg="white")
+login_page.resizable(False,False)
 
-#headings for the tables
-heading = Label(admin_page,text='login_info',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading.place(x=0,y=0)
-heading_1 = Label(admin_page,text='department',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading_1.place(x=200,y=0)
-heading_2 = Label(admin_page,text='patient',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading_2.place(x=400,y=0)
-heading_3 = Label(admin_page,text='doctor',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading_3.place(x=600,y=0)
-heading_3 = Label(admin_page,text='ambulance',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading_3.place(x=800,y=0)
-heading_4 = Label(admin_page,text='admin',fg='black',border=0,bg='white',font=('comicsansms',25,'bold'))
-heading_4.place(x=1100,y=0)
 
+#loading image
+my_image=ImageTk.PhotoImage(Image.open("mero.png"))
+bg_label=Label(image=my_image,bd=0)
+bg_label.place(x=0,y=0)#placing the image
+heading=Label(login_page,text="SIGN UP",bg="white",fg="VioletRed3",font=("Arial",20,"bold"))
+heading.place(x=670,y=50)
+#entry classes
+#username
+username=Entry(login_page,width=25,font=("Arial",11),fg="VioletRed3",bd=0)
+username.insert(0,"NAME")
+username.place(x=640,y=150)
+username.bind("<FocusIn>",on_enter)
+#password
+password=Entry(login_page,width=25,font=("Arial",11),fg="VioletRed3",bd=0)
+password.insert(0,"PASSWORD")
+password.place(x=640,y=250)
+password.bind("<FocusIn>",on_enter_2)
+#phone number
+phone_number=Entry(login_page,width=25,font=("Arial",11),fg="VioletRed3",bd=0)
+phone_number.insert(0,"PHONE NUMBER")
+phone_number.place(x=640,y=350)
+phone_number.bind("<FocusIn>",on_enter_3)
+#address
+address=Entry(login_page,width=25,font=("Arial",11),fg="VioletRed3",bd=0)
+address.insert(0,"ADDRESS")
+address.place(x=640,y=450)
+address.bind("<FocusIn>",on_enter_4)
 #frames
-frame1=Frame(admin_page,width=2,height=200,bg="VioletRed3").place(x=180,y=0)
-frame2=Frame(admin_page,width=2,height=200,bg="VioletRed3").place(x=380,y=0)
-frame3=Frame(admin_page,width=2,height=200,bg="VioletRed3").place(x=580,y=0)
-frame4=Frame(admin_page,width=2,height=200,bg="VioletRed3").place(x=780,y=0)
-frame4=Frame(admin_page,width=2,height=200,bg="VioletRed3").place(x=1080,y=0)
-
-#show contents of login page
-def show_records_login():
-
-    cursor.execute("SELECT *, oid FROM login_info")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[1])+ " "+ "\t"+str(record[4])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=0,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_login,bg="red",fg="white")
-show_button.place(x=0,y=50)
-
-#delete records of login page
-
-def delete_login():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    a=delete_entry.get()
-    cursor.execute("DELETE from login_info WHERE oid = "+str(a))
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=0,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_login,bg="red",fg="white")
-delete_button.place(x=0,y=150)
-
-#show contents of department
-def show_records_department():
-
-    cursor.execute("SELECT *, oid FROM department")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[1])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=200,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_department,bg="red",fg="white")
-show_button.place(x=200,y=50)
-
-#delete records of department
-
-def delete_department():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    cursor.execute("DELETE from department WHERE oid = "+delete_entry.get())
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=200,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_department,bg="red",fg="white")
-delete_button.place(x=200,y=150)
-
-#show contents of patient
-def show_records_patient():
-
-    cursor.execute("SELECT *, oid FROM patient")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[2])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=400,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_patient,bg="red",fg="white")
-show_button.place(x=400,y=50)
-
-#delete records of patient
-
-def delete_patient():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    cursor.execute("DELETE from patient WHERE oid = "+delete_entry.get())
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=400,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_patient,bg="red",fg="white")
-delete_button.place(x=400,y=150)
-
-#show contents of doctor
-def show_records_admin():
-
-    cursor.execute("SELECT *, oid FROM doctor")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[5])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=600,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_admin,bg="red",fg="white")
-show_button.place(x=600,y=50)
-
-#delete records of doctor
-
-def delete_admin():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    cursor.execute("DELETE from admin WHERE oid = "+delete_entry.get())
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=600,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_admin,bg="red",fg="white")
-delete_button.place(x=600,y=150)
-
-#show contents of ambulance
-def show_records_ambulance():
-
-    cursor.execute("SELECT *, oid FROM ambulance")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[1])+ " "+ "\t"+str(record[4])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=900,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_ambulance,bg="red",fg="white")
-show_button.place(x=900,y=50)
-
-#delete records of ambulance
-
-def delete_ambulance():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    a=delete_entry.get()
-    cursor.execute("DELETE from ambulance WHERE oid = "+str(a))
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=900,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_ambulance,bg="red",fg="white")
-delete_button.place(x=900,y=150)
-
-#show contents of admin
-def show_records_admin():
-
-    cursor.execute("SELECT *, oid FROM admin")
-    records=cursor.fetchall()
-    print(records)
-    print_record=''
-    for record in records:
-        print_record+=str(record[0])+" "+str(record[1])+ " "+ "\t"+str(record[3])+"\n"
-
-    # query_label=Label(admin_page,text=print_record)
-    # query_label.place(x=1100,y=200)
-
-show_button=Button(admin_page,text="show",command=show_records_admin,bg="red",fg="white")
-show_button.place(x=1100,y=50)
-
-#delete records of admin
-
-def delete_login():
-    database=sqlite3.connect("data.db")
-    cursor=database.cursor()
-    a=delete_entry.get()
-    cursor.execute("DELETE from admin WHERE oid = "+str(a))
-    print("Deleted Successfully")
-    database.commit()
-    database.close()
-
-
-delete_entry=Entry(admin_page)
-delete_entry.place(x=1100,y=100)
-
-delete_button=Button(admin_page,text="delete",command=delete_login,bg="red",fg="white")
-delete_button.place(x=1100,y=150)
-
-#open the dashboard
-def dash():
-    admin_page.destroy()
-    runpy.run_path("dashb1.py")
-
-dash = Button(admin_page,text='OPEN DASHBOARD',border=5,bg='violetred3',fg='black',command=dash)
-dash.place(x=0,y=200,width=1200,height=60)
+frame1=Frame(login_page,width=200,height=2,bg="VioletRed3").place(x=640,y=175)#username
+frame2=Frame(login_page,width=200,height=2,bg="VioletRed3").place(x=640,y=275)#password
+frame3=Frame(login_page,width=200,height=2,bg="VioletRed3").place(x=640,y=375)#phone_number
+frame4=Frame(login_page,width=200,height=2,bg="VioletRed3").place(x=640,y=475)#address
+#Button(show_notshow)
+open_eye=PhotoImage(file="openeye(1).png")
+eyeButton=Button(login_page,image=open_eye,bd=0,bg="white",cursor="hand2",command=hide)
+eyeButton.place(x=810,y=245)
+label = Label(login_page,text="Have an account?",fg='VioletRed3',bg='white',font=('Microsoft YaHei UI Light',9))
+label.place(x=635,y=485)
+registerButton=Button(login_page,text="SIGN IN",bd=0,bg="VioletRed3",fg="white",cursor="hand2",font=("Arial",11),command=font)
+registerButton.place(x=775,y=485)
+loginButton=Button(login_page,text="SIGN UP",bg="VioletRed3",fg="white",cursor="hand2",font=("Arial",9),command=connect_database)
+loginButton.place(x=705,y=510)
 
 #running the loop
-admin_page.mainloop()
+login_page.mainloop()
